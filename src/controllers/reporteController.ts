@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ReporteService } from ".../services/reporteService.js";
+import { ReporteService } from "../services/reporteService.js";
 
 const reporteService = new ReporteService();
 export class ReporteController {
