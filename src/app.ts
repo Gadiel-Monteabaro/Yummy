@@ -11,7 +11,7 @@ import cors from "cors";
 const app = express();
 
 const opcionesCors = {
-  origin: "http://localhost:5173",
+  origin: "https://yummy-rc69.onrender.com",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
