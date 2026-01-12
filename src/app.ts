@@ -1,11 +1,11 @@
 import express from "express";
-import { errorMiddleware } from "@/middlewares/error.middleware.js";
-import insumoRoutes from "@/routes/insumo.routes.js";
-import productoRoutes from "@/routes/producto.routes.js";
-import pedidoRoutes from "@/routes/pedido.routes.js";
-import compraRoutes from "@/routes/compra.routes.js";
-import reporteRoutes from "@/routes/reporte.routes.js";
-import categoriaRoutes from "@/routes/categoria.routes.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
+import insumoRoutes from "./routes/insumo.routes.js";
+import productoRoutes from "./routes/producto.routes.js";
+import pedidoRoutes from "./routes/pedido.routes.js";
+import compraRoutes from "./routes/compra.routes.js";
+import reporteRoutes from "./routes/reporte.routes.js";
+import categoriaRoutes from "./routes/categoria.routes.js";
 import cors from "cors";
 
 const app = express();

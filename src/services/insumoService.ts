@@ -1,5 +1,5 @@
-import { InsumoData } from "@/data/insumoData.js";
-import { IInsumo } from "@/data/insumoData.js";
+import { InsumoData } from "../data/insumoData.js";
+import { IInsumo } from "../data/insumoData.js";
 
 // Instanciamos la capa de datos
 const insumoData = new InsumoData();

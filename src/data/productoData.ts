@@ -1,4 +1,4 @@
-import pool from "@/config/db.js";
+import pool from "../config/db.js";
 
 export class ProductoData {
   async findAll(id_categoria?: number, soloHabilitados: boolean = false) {

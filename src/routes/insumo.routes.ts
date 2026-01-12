@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { InsumoController } from "@/controllers/insumoController.js";
+import { InsumoController } from "../controllers/insumoController.js";
 import { body } from "express-validator";
-import { validateRequest } from "@/middlewares/validateRequest.js";
-import { validateIdParam } from "@/validators/id.validator.js";
+import { validateRequest } from "../middlewares/validateRequest.js";
+import { validateIdParam } from "../validators/id.validator.js";
 
 const router = Router();
 const controller = new InsumoController();

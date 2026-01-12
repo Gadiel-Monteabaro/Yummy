@@ -1,4 +1,4 @@
-import { CompraData } from "@/data/compraData.js";
+import { CompraData } from "../data/compraData.js";
 
 const compraData = new CompraData();
 

@@ -1,5 +1,5 @@
-import app from "@/app.js";
-import pool from "@/config/db.js"; // ¡No olvides importar tu pool!
+import app from "./app.js";
+import pool from "./config/db.js"; // ¡No olvides importar tu pool!
 
 const PORT = process.env.PORT || 3000;
 

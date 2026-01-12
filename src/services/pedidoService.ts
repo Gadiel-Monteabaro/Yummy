@@ -1,5 +1,5 @@
-import { PedidoData } from "@/data/pedidoData.js";
-import type { IDetallePedido } from "@/data/pedidoData.js";
+import { PedidoData } from "../data/pedidoData.js";
+import type { IDetallePedido } from "../data/pedidoData.js";
 
 const pedidoData = new PedidoData();
 

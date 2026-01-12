@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { CompraService } from "@/services/compraService.js";
+import { CompraService } from "../services/compraService.js";
 
 const compraService = new CompraService();
 

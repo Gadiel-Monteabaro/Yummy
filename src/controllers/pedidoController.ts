@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { PedidoService } from "@/services/pedidoService.js";
+import { PedidoService } from "../services/pedidoService.js";
 
 const pedidoService = new PedidoService();
 

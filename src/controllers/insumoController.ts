@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { InsumoService } from "@/services/insumoService.js";
+import { InsumoService } from "../services/insumoService.js";
 const insumoService = new InsumoService();
 
 export class InsumoController {

@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { ProductoController } from "@/controllers/productController.js";
+import { ProductoController } from "../controllers/productController.js";
 import { body } from "express-validator";
-import { validateRequest } from "@/middlewares/validateRequest.js";
-import { validateIdParam } from "@/validators/id.validator.js";
+import { validateRequest } from "../middlewares/validateRequest.js";
+import { validateIdParam } from "../validators/id.validator.js";
 
 const router = Router();
 const controller = new ProductoController();

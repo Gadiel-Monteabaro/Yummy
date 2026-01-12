@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { ReporteController } from "@/controllers/reporteController.js";
+import { ReporteController } from "../controllers/reporteController.js";
 import { query } from "express-validator";
-import { validateRequest } from "@/middlewares/validateRequest.js";
+import { validateRequest } from "../middlewares/validateRequest.js";
 
 const router = Router();
 const controller = new ReporteController();

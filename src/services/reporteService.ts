@@ -1,4 +1,4 @@
-import { ReportData } from "@/data/reporteData.js";
+import { ReportData } from "../data/reporteData.js";
 
 const reporteData = new ReportData();
 

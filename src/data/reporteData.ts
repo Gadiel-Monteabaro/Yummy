@@ -1,5 +1,4 @@
-import pool from "@/config/db.js";
-import { parse } from "node:path";
+import pool from "../config/db.js";
 
 export class ReportData {
   async getStockCritico() {

@@ -1,4 +1,4 @@
-import { CategoriaData } from "@/data/categoriaData.js";
+import { CategoriaData } from "../data/categoriaData.js";
 
 const categoriaData = new CategoriaData();
 

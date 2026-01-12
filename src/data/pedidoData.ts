@@ -1,4 +1,4 @@
-import pool from "@/config/db.js";
+import pool from "../config/db.js";
 
 export interface IDetallePedido {
   id_producto: number;

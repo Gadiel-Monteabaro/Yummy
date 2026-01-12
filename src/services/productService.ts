@@ -1,4 +1,4 @@
-import { ProductoData } from "@/data/productoData.js";
+import { ProductoData } from "../data/productoData.js";
 
 const productoData = new ProductoData();
 
