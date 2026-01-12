@@ -11,7 +11,10 @@ import cors from "cors";
 const app = express();
 
 const opcionesCors = {
-  origin: "https://yummy-rc69.onrender.com",
+  origin: [
+    "https://yummy-rc69.onrender.com",
+    "https://yummy-frontend-sigma.vercel.app/",
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
