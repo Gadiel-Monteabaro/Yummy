@@ -37,6 +37,8 @@ export class PedidoService {
   }
 
   async actualizarEstadoPedido(id: number, estado: string) {
+    const estadoLimpio = estado.trim().normalize("NFC");
+
     const estadosValidos = [
       "Pendiente",
       "En Preparación",
@@ -45,11 +47,11 @@ export class PedidoService {
       "Cancelado",
     ];
 
-    if (!estadosValidos.includes(estado)) {
-      throw new Error("Estado de pedido inválido");
+    if (!estadosValidos.includes(estadoLimpio)) {
+      throw new Error(`Estado de pedido inválido: "${estadoLimpio}"`);
     }
 
-    const pedidoActualizado = await pedidoData.updateStatus(id, estado);
+    const pedidoActualizado = await pedidoData.updateStatus(id, estadoLimpio);
 
     if (!pedidoActualizado) {
       throw new Error("No se pudo actualizar el estado del pedido");
