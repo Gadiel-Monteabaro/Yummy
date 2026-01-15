@@ -48,7 +48,7 @@ router.patch(
   body("estado")
     .isIn([
       "Pendiente",
-      "En Preparación",
+      "En Preparacion",
       "Completado",
       "Entregado",
       "Cancelado",
