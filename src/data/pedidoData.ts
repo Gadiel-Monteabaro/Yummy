@@ -205,6 +205,10 @@ export class PedidoData {
         [estado, id]
       );
 
+      if (res.rowCount === 0) {
+        throw new Error("Pedido no encontrado");
+      }
+
       if (estado === "Cancelado") {
         await client.query(
           `
