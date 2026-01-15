@@ -195,21 +195,25 @@ export class PedidoData {
   }
 
   async updateStatus(id: number, estado: string) {
+    console.log("updateStatus called:", { id, estado });
     const client = await pool.connect();
 
     try {
       await client.query("BEGIN");
+      console.log("Transaction started");
 
       const res = await client.query(
         `UPDATE pedidos SET estado = $1 WHERE id_pedido = $2 RETURNING *`,
         [estado, id]
       );
+      console.log("Pedido updated, rowCount:", res.rowCount);
 
       if (res.rowCount === 0) {
         throw new Error("Pedido no encontrado");
       }
 
       if (estado === "Cancelado") {
+        console.log("Restoring stock...");
         await client.query(
           `
         UPDATE insumos
@@ -225,9 +229,11 @@ export class PedidoData {
       `,
           [id]
         );
+        console.log("Stock restored");
       }
 
       await client.query("COMMIT");
+      console.log("Transaction committed");
       return res.rows[0];
     } catch (error) {
       await client.query("ROLLBACK");
