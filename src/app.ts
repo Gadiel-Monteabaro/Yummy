@@ -10,25 +10,26 @@ import cors from "cors";
 
 const app = express();
 
-const allowedOrigins = [
-  "https://yummy-rc69.onrender.com", // opcional si tu backend hace requests a sí mismo
-  "https://yummy-frontend-sigma.vercel.app", // tu frontend en Vercel
-];
+/* Esto es para produccion */
+// const allowedOrigins = [
+//   "https://yummy-rc69.onrender.com", // opcional si tu backend hace requests a sí mismo
+//   "https://yummy-frontend-sigma.vercel.app", // tu frontend en Vercel
+// ];
 
-const opcionesCors = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    if (!origin) return callback(null, true); // permite requests desde Postman o curl
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Origen no permitido por CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// const opcionesCors = {
+//   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+//     if (!origin) return callback(null, true); // permite requests desde Postman o curl
+//     if (allowedOrigins.indexOf(origin) !== -1) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Origen no permitido por CORS"));
+//     }
+//   },
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+// };
 
-app.use(cors(opcionesCors));
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/categorias", categoriaRoutes);

@@ -42,6 +42,11 @@ export class PedidoController {
     res: Response,
     next: NextFunction
   ) => {
+    console.log("PATCH /estado", {
+      id: req.params.id,
+      estado: req.body.estado,
+    });
+
     try {
       const { id } = req.params;
       const { estado } = req.body;
@@ -51,7 +56,7 @@ export class PedidoController {
         estado
       );
 
-      res.status(200).json({ ok: true, data: pedidoActualizado }) ;
+      res.status(200).json({ ok: true, data: pedidoActualizado });
     } catch (error) {
       next(error);
     }
