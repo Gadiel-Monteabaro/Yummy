@@ -212,12 +212,16 @@ export class PedidoData {
       if (estado === "Cancelado") {
         await client.query(
           `
-        UPDATE insumos i
-        SET stock_actual = i.stock_actual + (r.cantidad_necesaria * dp.cantidad)
-        FROM detalle_pedidos dp
-        JOIN recetas r ON dp.id_producto = r.id_producto
-        WHERE dp.id_pedido = $1 
-          AND r.id_insumo = i.id_insumo
+        UPDATE insumos
+        SET stock_actual = stock_actual + subq.total_cantidad
+        FROM (
+          SELECT r.id_insumo, SUM(r.cantidad_necesaria * dp.cantidad) as total_cantidad
+          FROM detalle_pedidos dp
+          JOIN recetas r ON dp.id_producto = r.id_producto
+          WHERE dp.id_pedido = $1
+          GROUP BY r.id_insumo
+        ) subq
+        WHERE insumos.id_insumo = subq.id_insumo
       `,
           [id]
         );
