@@ -17,7 +17,6 @@ export class InsumoData {
 
     return result.rows;
   }
-
   async create(
     nombre: string,
     stock_actual: number,
@@ -25,23 +24,48 @@ export class InsumoData {
     unidad_medida: string,
     precio_costo_unitario: number
   ): Promise<IInsumo> {
-    const sql = `
-      INSERT INTO insumos (nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario) 
-      VALUES ($1, $2, $3, $4, $5) 
-      RETURNING id_insumo, nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario
-    `;
+    const client = await pool.connect();
 
-    const values = [
-      nombre,
-      stock_actual,
-      stock_minimo,
-      unidad_medida,
-      precio_costo_unitario,
-    ];
+    try {
+      await client.query("BEGIN");
 
-    const result = await pool.query(sql, values);
+      const sql = `
+        INSERT INTO insumos (nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING id_insumo, nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario
+      `;
 
-    return result.rows[0];
+      const values = [
+        nombre,
+        stock_actual,
+        stock_minimo,
+        unidad_medida,
+        precio_costo_unitario,
+      ];
+
+      const result = await client.query(sql, values);
+      const nuevoInsumo = result.rows[0];
+
+      // Si se creó con stock inicial, registrar la compra
+      if (stock_actual > 0) {
+        const gastoInicial = stock_actual * precio_costo_unitario;
+
+        await client.query(
+          `INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) 
+           VALUES ($1, $2, $3, NOW())`,
+          [nuevoInsumo.id_insumo, stock_actual, gastoInicial]
+        );
+      }
+
+      await client.query("COMMIT");
+      return nuevoInsumo;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error al crear insumo:", error);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   // En tu archivo donde esta la clase InsumoData
