@@ -42,26 +42,39 @@ export class InsumoController {
   ) => {
     try {
       const { id } = req.params;
-      const {
-        nombre,
-        stock_actual,
-        stock_minimo,
-        unidad_medida,
-        precio_costo_unitario,
-      } = req.body;
+      const { nombre, stock_minimo, unidad_medida, precio_costo_unitario } =
+        req.body;
 
       const resultado = await insumoService.actualizarInsumo(
         Number(id),
         nombre,
-        stock_actual,
         stock_minimo,
         unidad_medida,
         precio_costo_unitario
       );
 
       return res
-        .status(201)
+        .status(200)
         .json({ message: "Insumo actualizado", data: resultado });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  registrarCompra = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { cantidad_comprada, precio_costo_unitario } = req.body;
+
+      const resultado = await insumoService.registrarCompra(
+        Number(id),
+        cantidad_comprada,
+        precio_costo_unitario
+      );
+
+      return res
+        .status(200)
+        .json({ message: "Compra registrada exitosamente", data: resultado });
     } catch (error) {
       next(error);
     }

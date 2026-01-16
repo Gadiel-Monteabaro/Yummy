@@ -42,16 +42,6 @@ export class PedidoController {
     res: Response,
     next: NextFunction
   ) => {
-    console.log("PATCH /estado", {
-      id: req.params.id,
-      estado: req.body.estado,
-      estadoLength: req.body.estado?.length,
-      estadoBytes: Buffer.from(req.body.estado || "", "utf-8").toString("hex"),
-      estadoCharCodes: req.body.estado
-        ?.split("")
-        .map((c: string) => c.charCodeAt(0)),
-    });
-
     try {
       const { id } = req.params;
       const { estado } = req.body;

@@ -37,29 +37,42 @@ export class InsumoService {
   async actualizarInsumo(
     id: number,
     nombre: string,
-    stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
     precio_costo_unitario: number
-  ): Promise<IInsumo> {
-    const nombreMin = nombre.toLowerCase().trim();
-
+  ) {
     const insumoActualizado = await insumoData.update(
       id,
-      nombreMin,
-      stock_actual,
+      nombre,
       stock_minimo,
       unidad_medida,
       precio_costo_unitario
     );
 
     if (!insumoActualizado) {
-      throw new Error(`No se encontró el insumo con ID ${id} para actualizar.`);
+      throw new Error("Insumo no encontrado");
     }
 
     return insumoActualizado;
   }
 
+  async registrarCompra(
+    id: number,
+    cantidad_comprada: number,
+    precio_costo_unitario: number
+  ) {
+    const insumoActualizado = await insumoData.addStock(
+      id,
+      cantidad_comprada,
+      precio_costo_unitario
+    );
+
+    if (!insumoActualizado) {
+      throw new Error("Insumo no encontrado");
+    }
+
+    return insumoActualizado;
+  }
   async eliminarInsumo(id: number): Promise<void> {
     const eliminado = await insumoData.delete(id);
     if (!eliminado) {

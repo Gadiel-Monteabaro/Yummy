@@ -41,7 +41,9 @@ router.post(
   controller.createInsumo.bind(controller)
 );
 
-router.put(
+// Editar datos básicos del insumo (sin tocar stock)
+router.patch(
+  // ← Cambié de PUT a PATCH
   "/:id",
   validateIdParam("id"),
   body("nombre")
@@ -50,10 +52,6 @@ router.put(
     .withMessage("El nombre del insumo es obligatorio")
     .isLength({ min: 3, max: 50 })
     .withMessage("El nombre debe tener entre 3 y 50 caracteres"),
-  body("stock_actual")
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage("El stock actual no puede ser negativo"),
   body("stock_minimo")
     .notEmpty()
     .withMessage("El stock mínimo es requerido para alertas")
@@ -72,6 +70,23 @@ router.put(
     .withMessage("El precio no puede ser negativo"),
   validateRequest,
   controller.actualizarInsumo.bind(controller)
+);
+
+router.post(
+  "/:id/compra",
+  validateIdParam("id"),
+  body("cantidad_comprada")
+    .notEmpty()
+    .withMessage("La cantidad comprada es obligatoria")
+    .isFloat({ min: 0.01 })
+    .withMessage("La cantidad debe ser mayor a 0"),
+  body("precio_costo_unitario")
+    .notEmpty()
+    .withMessage("El precio de costo es obligatorio")
+    .isFloat({ min: 0.01 })
+    .withMessage("El precio debe ser mayor a 0"),
+  validateRequest,
+  controller.registrarCompra.bind(controller)
 );
 
 router.delete(

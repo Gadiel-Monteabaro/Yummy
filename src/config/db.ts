@@ -25,6 +25,7 @@ const pool = new Pool({
       : false,
   client_encoding: "UTF8",
 });
+
 pool.on("connect", () => {
   console.log("✅ DB conectada");
 });

@@ -68,13 +68,41 @@ export class InsumoData {
     }
   }
 
-  // En tu archivo donde esta la clase InsumoData
   async update(
     id: number,
     nombre: string,
-    stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
+    precio_costo_unitario: number
+  ): Promise<IInsumo | null> {
+    const sql = `
+    UPDATE insumos 
+    SET nombre = $1, 
+        stock_minimo = $2, 
+        unidad_medida = $3, 
+        precio_costo_unitario = $4
+    WHERE id_insumo = $5
+    RETURNING *
+  `;
+
+    const result = await pool.query(sql, [
+      nombre,
+      stock_minimo,
+      unidad_medida,
+      precio_costo_unitario,
+      id,
+    ]);
+
+    if (result.rowCount === 0) {
+      return null;
+    }
+
+    return result.rows[0];
+  }
+
+  async addStock(
+    id: number,
+    cantidad_comprada: number,
     precio_costo_unitario: number
   ): Promise<IInsumo | null> {
     const client = await pool.connect();
@@ -82,7 +110,7 @@ export class InsumoData {
     try {
       await client.query("BEGIN");
 
-      // 1. OBTENER EL VALOR ACTUAL ANTES DE MODIFICAR
+      // 1. Obtener stock actual
       const resPrevio = await client.query(
         "SELECT stock_actual FROM insumos WHERE id_insumo = $1 FOR UPDATE",
         [id]
@@ -92,33 +120,35 @@ export class InsumoData {
         throw new Error("Insumo no encontrado");
       }
 
-      const stockViejo = parseFloat(resPrevio.rows[0].stock_actual) || 0;
-      const stockNuevo = parseFloat(stock_actual.toString());
+      const stockActual = parseFloat(resPrevio.rows[0].stock_actual) || 0;
+      const cantidadComprada = parseFloat(cantidad_comprada.toString());
       const precioUnitario = parseFloat(precio_costo_unitario.toString());
 
-      const diferencia = stockNuevo - stockViejo;
+      // 2. Calcular nuevo stock
+      const nuevoStock = stockActual + cantidadComprada;
 
+      // 3. Actualizar stock y precio
       const sqlUpdate = `
       UPDATE insumos 
-      SET nombre = $1, stock_actual = $2, stock_minimo = $3, unidad_medida = $4, precio_costo_unitario = $5
-      WHERE id_insumo = $6
+      SET stock_actual = $1, precio_costo_unitario = $2
+      WHERE id_insumo = $3
       RETURNING *
     `;
+
       const resultUpdate = await client.query(sqlUpdate, [
-        nombre,
-        stockNuevo,
-        stock_minimo,
-        unidad_medida,
+        nuevoStock,
         precioUnitario,
         id,
       ]);
 
-      if (diferencia > 0) {
-        const gastoDeEstaCompra = diferencia * precioUnitario;
+      // 4. Registrar la compra
+      if (cantidadComprada > 0) {
+        const gastoDeEstaCompra = cantidadComprada * precioUnitario;
 
         await client.query(
-          "INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) VALUES ($1, $2, $3, NOW())",
-          [id, diferencia, gastoDeEstaCompra]
+          `INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) 
+         VALUES ($1, $2, $3, NOW())`,
+          [id, cantidadComprada, gastoDeEstaCompra]
         );
       }
 
@@ -126,7 +156,7 @@ export class InsumoData {
       return resultUpdate.rows[0];
     } catch (error) {
       await client.query("ROLLBACK");
-      console.error("Error en la transacción de update:", error);
+      console.error("Error al agregar stock:", error);
       throw error;
     } finally {
       client.release();

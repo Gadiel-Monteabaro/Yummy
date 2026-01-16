@@ -39,7 +39,7 @@ export class PedidoService {
   async actualizarEstadoPedido(id: number, estado: string) {
     const estadosValidos = [
       "Pendiente",
-      "En Preparacion", // Sin tilde
+      "En Preparacion", 
       "Completado",
       "Entregado",
       "Cancelado",
