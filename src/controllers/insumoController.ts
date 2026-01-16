@@ -42,12 +42,18 @@ export class InsumoController {
   ) => {
     try {
       const { id } = req.params;
-      const { nombre, stock_minimo, unidad_medida, precio_costo_unitario } =
-        req.body;
+      const {
+        nombre,
+        stock_actual,
+        stock_minimo,
+        unidad_medida,
+        precio_costo_unitario,
+      } = req.body;
 
       const resultado = await insumoService.actualizarInsumo(
         Number(id),
         nombre,
+        stock_actual,
         stock_minimo,
         unidad_medida,
         precio_costo_unitario

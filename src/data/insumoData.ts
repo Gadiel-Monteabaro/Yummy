@@ -71,6 +71,7 @@ export class InsumoData {
   async update(
     id: number,
     nombre: string,
+    stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
     precio_costo_unitario: number
@@ -78,15 +79,17 @@ export class InsumoData {
     const sql = `
     UPDATE insumos 
     SET nombre = $1, 
-        stock_minimo = $2, 
-        unidad_medida = $3, 
-        precio_costo_unitario = $4
-    WHERE id_insumo = $5
+        stock_actual = $2,
+        stock_minimo = $3, 
+        unidad_medida = $4, 
+        precio_costo_unitario = $5
+    WHERE id_insumo = $6
     RETURNING *
   `;
 
     const result = await pool.query(sql, [
       nombre,
+      stock_actual,
       stock_minimo,
       unidad_medida,
       precio_costo_unitario,

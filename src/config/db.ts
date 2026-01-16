@@ -17,6 +17,7 @@ dotenv.config();
 //         database: process.env.DB_NAME,
 //       }
 // );
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl:

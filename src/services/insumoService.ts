@@ -37,6 +37,7 @@ export class InsumoService {
   async actualizarInsumo(
     id: number,
     nombre: string,
+    stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
     precio_costo_unitario: number
@@ -44,6 +45,7 @@ export class InsumoService {
     const insumoActualizado = await insumoData.update(
       id,
       nombre,
+      stock_actual,
       stock_minimo,
       unidad_medida,
       precio_costo_unitario
