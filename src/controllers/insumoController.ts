@@ -13,26 +13,30 @@ export class InsumoController {
   }
 
   async createInsumo(req: Request, res: Response, next: NextFunction) {
-    const {
-      nombre,
-      stock_actual,
-      stock_minimo,
-      unidad_medida,
-      precio_costo_unitario,
-    } = req.body;
+    try {
+      const {
+        nombre,
+        stock_actual,
+        stock_minimo,
+        unidad_medida,
+        precio_costo_unitario,
+      } = req.body;
 
-    const result = await insumoService.registrarInsumo(
-      nombre,
-      stock_actual,
-      stock_minimo,
-      unidad_medida,
-      precio_costo_unitario
-    );
+      const result = await insumoService.registrarInsumo(
+        nombre,
+        stock_actual,
+        stock_minimo,
+        unidad_medida,
+        precio_costo_unitario
+      );
 
-    return res.status(201).json({
-      message: "Insumo creado exitosamente",
-      data: result,
-    });
+      return res.status(201).json({
+        message: "Insumo creado exitosamente",
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
   actualizarInsumo = async (
@@ -45,7 +49,7 @@ export class InsumoController {
       const {
         nombre,
         stock_actual,
-        stock_minimo,
+        stock_minimo, // ← Eliminé stock_actual
         unidad_medida,
         precio_costo_unitario,
       } = req.body;
@@ -92,7 +96,7 @@ export class InsumoController {
       await insumoService.eliminarInsumo(Number(id));
       return res
         .status(200)
-        .json({ message: `Insumo eliminado correctamente` });
+        .json({ message: "Insumo marcado como inactivo correctamente" }); // ← Cambié el mensaje
     } catch (error) {
       next(error);
     }

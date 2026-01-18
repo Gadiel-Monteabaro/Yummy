@@ -193,12 +193,12 @@ export class PedidoData {
       client.release();
     }
   }
+
   async updateStatus(id: number, estado: string) {
     console.log("updateStatus called:", { id, estado });
     const client = await pool.connect();
 
     try {
-      // AGREGA ESTA LÍNEA AQUÍ
       await client.query("SET client_encoding TO 'UTF8'");
 
       await client.query("BEGIN");

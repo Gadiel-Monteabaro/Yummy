@@ -1,22 +1,26 @@
 import pool from "../config/db.js";
 
 export interface IInsumo {
-  id_insumo?: number;
+  id_insumo: number;
   nombre: string;
   stock_actual: number;
   stock_minimo: number;
   unidad_medida: string;
   precio_costo_unitario: number;
+  activo: boolean;
 }
 
 export class InsumoData {
-  async findAll(): Promise<IInsumo[]> {
-    const query =
-      "SELECT id_insumo, nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario FROM insumos";
-    const result = await pool.query(query);
-
+  async getAll(): Promise<IInsumo[]> {
+    const sql = `
+    SELECT * FROM insumos 
+    WHERE activo = true 
+    ORDER BY nombre
+  `;
+    const result = await pool.query(sql);
     return result.rows;
   }
+
   async create(
     nombre: string,
     stock_actual: number,
@@ -30,10 +34,10 @@ export class InsumoData {
       await client.query("BEGIN");
 
       const sql = `
-        INSERT INTO insumos (nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario) 
-        VALUES ($1, $2, $3, $4, $5) 
-        RETURNING id_insumo, nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario
-      `;
+      INSERT INTO insumos (nombre, stock_actual, stock_minimo, unidad_medida, precio_costo_unitario, activo) 
+      VALUES ($1, $2, $3, $4, $5, true) 
+      RETURNING *
+    `;
 
       const values = [
         nombre,
@@ -52,7 +56,7 @@ export class InsumoData {
 
         await client.query(
           `INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) 
-           VALUES ($1, $2, $3, NOW())`,
+         VALUES ($1, $2, $3, NOW())`,
           [nuevoInsumo.id_insumo, stock_actual, gastoInicial]
         );
       }
@@ -68,6 +72,7 @@ export class InsumoData {
     }
   }
 
+  // En InsumoData
   async update(
     id: number,
     nombre: string,
@@ -79,11 +84,11 @@ export class InsumoData {
     const sql = `
     UPDATE insumos 
     SET nombre = $1, 
-        stock_actual = $2,
+        stock_actual = $2, 
         stock_minimo = $3, 
         unidad_medida = $4, 
         precio_costo_unitario = $5
-    WHERE id_insumo = $6
+    WHERE id_insumo = $6 AND activo = true
     RETURNING *
   `;
 
@@ -113,28 +118,25 @@ export class InsumoData {
     try {
       await client.query("BEGIN");
 
-      // 1. Obtener stock actual
+      // Obtener stock actual (solo si está activo)
       const resPrevio = await client.query(
-        "SELECT stock_actual FROM insumos WHERE id_insumo = $1 FOR UPDATE",
+        "SELECT stock_actual FROM insumos WHERE id_insumo = $1 AND activo = true FOR UPDATE",
         [id]
       );
 
       if (resPrevio.rowCount === 0) {
-        throw new Error("Insumo no encontrado");
+        throw new Error("Insumo no encontrado o inactivo");
       }
 
       const stockActual = parseFloat(resPrevio.rows[0].stock_actual) || 0;
       const cantidadComprada = parseFloat(cantidad_comprada.toString());
       const precioUnitario = parseFloat(precio_costo_unitario.toString());
-
-      // 2. Calcular nuevo stock
       const nuevoStock = stockActual + cantidadComprada;
 
-      // 3. Actualizar stock y precio
       const sqlUpdate = `
       UPDATE insumos 
       SET stock_actual = $1, precio_costo_unitario = $2
-      WHERE id_insumo = $3
+      WHERE id_insumo = $3 AND activo = true
       RETURNING *
     `;
 
@@ -144,7 +146,6 @@ export class InsumoData {
         id,
       ]);
 
-      // 4. Registrar la compra
       if (cantidadComprada > 0) {
         const gastoDeEstaCompra = cantidadComprada * precioUnitario;
 
@@ -166,9 +167,100 @@ export class InsumoData {
     }
   }
 
-  async delete(id: number): Promise<boolean> {
-    const sql = "DELETE FROM insumos WHERE id_insumo = $1";
+  async delete(id: number): Promise<void> {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      console.log("=== INTENTANDO ELIMINAR INSUMO ===");
+      console.log("ID:", id);
+
+      // 1. Verificar si está en recetas
+      const checkRecetas = await client.query(
+        "SELECT COUNT(*) as total FROM recetas WHERE id_insumo = $1",
+        [id]
+      );
+
+      const tieneRecetas = parseInt(checkRecetas.rows[0].total) > 0;
+      console.log("Tiene recetas:", tieneRecetas);
+
+      // 2. Si NO está en recetas, eliminar físicamente (incluye sus compras)
+      if (!tieneRecetas) {
+        console.log("✅ Eliminando físicamente (sin uso en recetas)");
+
+        // Primero eliminar las compras asociadas
+        const deleteCompras = await client.query(
+          "DELETE FROM compras WHERE id_insumo = $1",
+          [id]
+        );
+        console.log("Compras eliminadas:", deleteCompras.rowCount);
+
+        // Luego eliminar el insumo
+        const result = await client.query(
+          "DELETE FROM insumos WHERE id_insumo = $1",
+          [id]
+        );
+
+        if (result.rowCount === 0) {
+          throw new Error("Insumo no encontrado");
+        }
+
+        await client.query("COMMIT");
+        console.log("Insumo y sus compras eliminados completamente");
+        return;
+      }
+
+      // 3. Si está en recetas, solo borrado lógico
+      console.log("⚠️ Borrado lógico (tiene recetas asociadas)");
+      const result = await client.query(
+        "UPDATE insumos SET activo = false WHERE id_insumo = $1 AND activo = true",
+        [id]
+      );
+
+      if (result.rowCount === 0) {
+        throw new Error("Insumo no encontrado o ya está inactivo");
+      }
+
+      await client.query("COMMIT");
+      console.log(
+        "Insumo marcado como inactivo (mantiene compras para historial)"
+      );
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error en delete:", error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  
+  // OPCIONAL: Método para restaurar un insumo
+  async restore(id: number): Promise<IInsumo | null> {
+    const sql = `
+    UPDATE insumos 
+    SET activo = true 
+    WHERE id_insumo = $1
+    RETURNING *
+  `;
+
     const result = await pool.query(sql, [id]);
-    return (result.rowCount ?? 0) > 0;
+
+    if (result.rowCount === 0) {
+      return null;
+    }
+
+    return result.rows[0];
+  }
+
+  // OPCIONAL: Ver insumos inactivos (para administración)
+  async getAllInactive(): Promise<IInsumo[]> {
+    const sql = `
+    SELECT * FROM insumos 
+    WHERE activo = false 
+    ORDER BY nombre
+  `;
+    const result = await pool.query(sql);
+    return result.rows;
   }
 }

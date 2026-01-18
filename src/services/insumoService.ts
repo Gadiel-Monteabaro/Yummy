@@ -6,7 +6,7 @@ const insumoData = new InsumoData();
 
 export class InsumoService {
   async listarInsumos(): Promise<IInsumo[]> {
-    return await insumoData.findAll();
+    return await insumoData.getAll();
   }
 
   async registrarInsumo(
@@ -18,7 +18,7 @@ export class InsumoService {
   ): Promise<IInsumo> {
     const nombreEnMinuscula = nombre.toLowerCase().trim();
 
-    const todos = await insumoData.findAll();
+    const todos = await insumoData.getAll();
     const existe = todos.find((i) => i.nombre === nombreEnMinuscula);
 
     if (existe) {
@@ -75,10 +75,8 @@ export class InsumoService {
 
     return insumoActualizado;
   }
+
   async eliminarInsumo(id: number): Promise<void> {
-    const eliminado = await insumoData.delete(id);
-    if (!eliminado) {
-      throw new Error(`No se pudo eliminar: El insumo con ID ${id} no existe.`);
-    }
+    await insumoData.delete(id);
   }
 }

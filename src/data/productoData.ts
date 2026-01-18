@@ -26,10 +26,10 @@ export class ProductoData {
 
   async findById(id: number) {
     const sqlProducto = `
-      SELECT p.*, c.nombre as categoria_nombre 
-      FROM productos p
-      INNER JOIN categorias c ON p.id_categoria = c.id_categoria
-      WHERE p.id_producto = $1`;
+    SELECT p.*, c.nombre as categoria_nombre 
+    FROM productos p
+    INNER JOIN categorias c ON p.id_categoria = c.id_categoria
+    WHERE p.id_producto = $1`;
     const resProducto = await pool.query(sqlProducto, [id]);
 
     if (resProducto.rows.length === 0) return null;
@@ -37,10 +37,14 @@ export class ProductoData {
     const producto = resProducto.rows[0];
 
     const sqlReceta = `
-      SELECT r.id_insumo, i.nombre as insumo_nombre, r.cantidad_necesaria, i.unidad_medida
-      FROM recetas r
-      INNER JOIN insumos i ON r.id_insumo = i.id_insumo
-      WHERE r.id_producto = $1`;
+    SELECT 
+      r.id_insumo, 
+      i.nombre as nombre,  
+      r.cantidad_necesaria, 
+      i.unidad_medida
+    FROM recetas r
+    INNER JOIN insumos i ON r.id_insumo = i.id_insumo
+    WHERE r.id_producto = $1`;
     const resReceta = await pool.query(sqlReceta, [id]);
 
     return {
@@ -65,7 +69,7 @@ export class ProductoData {
     nombre: string,
     precio_venta: number,
     es_compuesto: boolean,
-    items: { id_insumo: number; cantidad_necesaria: number }[]
+    items: { id_insumo: number; cantidad_necesaria: number }[],
   ) {
     const client = await pool.connect();
     try {
@@ -114,7 +118,7 @@ export class ProductoData {
     precio_venta: number,
     es_compuesto: boolean,
     habilitado: boolean, // Agregado parámetro
-    items: { id_insumo: number; cantidad_necesaria: number }[]
+    items: { id_insumo: number; cantidad_necesaria: number }[],
   ): Promise<any> {
     const client = await pool.connect();
     try {

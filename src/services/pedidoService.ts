@@ -16,7 +16,7 @@ export class PedidoService {
     for (const item of items) {
       if (item.cantidad <= 0) {
         throw new Error(
-          `Cantidad inválida para el producto ${item.id_producto}`
+          `Cantidad inválida para el producto ${item.id_producto}`,
         );
       }
     }
@@ -39,7 +39,7 @@ export class PedidoService {
   async actualizarEstadoPedido(id: number, estado: string) {
     const estadosValidos = [
       "Pendiente",
-      "En Preparacion", 
+      "En Preparacion",
       "Completado",
       "Entregado",
       "Cancelado",
