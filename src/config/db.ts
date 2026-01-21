@@ -27,8 +27,13 @@ const pool = new Pool({
   client_encoding: "UTF8",
 });
 
-pool.on("connect", () => {
-  console.log("DB conectada");
+pool.on("connect", async (client) => {
+  try {
+    await client.query("SET timezone TO 'America/Argentina/Buenos_Aires'");
+    console.log("✅ DB conectada con timezone Argentina");
+  } catch (err) {
+    console.error("Error configurando timezone:", err);
+  }
 });
 
 export default pool;
