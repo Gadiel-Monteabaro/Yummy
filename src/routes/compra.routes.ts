@@ -12,7 +12,7 @@ router.get(
   "/:id_compra",
   validateIdParam("id_compra"),
   validateRequest,
-  controller.obtenerCompraPorId
+  controller.obtenerCompraPorId,
 );
 
 router.post(
@@ -34,14 +34,27 @@ router.post(
     .withMessage("El precio no puede ser negativo"),
 
   validateRequest,
-  controller.registrarCompra
+  controller.registrarCompra,
+);
+
+router.patch(
+  "/:id",
+  validateIdParam("id"),
+  body("cantidad_comprada")
+    .isFloat({ min: 0.01 })
+    .withMessage("La cantidad debe ser mayor a 0"),
+  body("precio_pagado")
+    .isFloat({ min: 0.01 })
+    .withMessage("El precio debe ser mayor a 0"),
+  validateRequest,
+  controller.actualizarCompra.bind(controller),
 );
 
 router.delete(
   "/:id_compra",
   validateIdParam("id_compra"),
   validateRequest,
-  controller.eliminarCompra
+  controller.eliminarCompra,
 );
 
 export default router;

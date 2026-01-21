@@ -26,7 +26,7 @@ export class InsumoData {
     stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
-    precio_costo_unitario: number
+    precio_costo_unitario: number,
   ): Promise<IInsumo> {
     const client = await pool.connect();
 
@@ -57,7 +57,7 @@ export class InsumoData {
         await client.query(
           `INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) 
          VALUES ($1, $2, $3, NOW())`,
-          [nuevoInsumo.id_insumo, stock_actual, gastoInicial]
+          [nuevoInsumo.id_insumo, stock_actual, gastoInicial],
         );
       }
 
@@ -72,46 +72,88 @@ export class InsumoData {
     }
   }
 
-  // En InsumoData
   async update(
     id: number,
     nombre: string,
     stock_actual: number,
     stock_minimo: number,
     unidad_medida: string,
-    precio_costo_unitario: number
+    precio_costo_unitario: number,
   ): Promise<IInsumo | null> {
-    const sql = `
-    UPDATE insumos 
-    SET nombre = $1, 
-        stock_actual = $2, 
-        stock_minimo = $3, 
-        unidad_medida = $4, 
-        precio_costo_unitario = $5
-    WHERE id_insumo = $6 AND activo = true
-    RETURNING *
-  `;
+    const client = await pool.connect();
 
-    const result = await pool.query(sql, [
-      nombre,
-      stock_actual,
-      stock_minimo,
-      unidad_medida,
-      precio_costo_unitario,
-      id,
-    ]);
+    try {
+      await client.query("BEGIN");
 
-    if (result.rowCount === 0) {
-      return null;
+      const checkCompras = await client.query(
+        "SELECT COUNT(*) as total FROM compras WHERE id_insumo = $1",
+        [id],
+      );
+
+      const cantidadCompras = parseInt(checkCompras.rows[0].total);
+
+      const sqlUpdate = `
+      UPDATE insumos 
+      SET nombre = $1, 
+          stock_actual = $2, 
+          stock_minimo = $3, 
+          unidad_medida = $4, 
+          precio_costo_unitario = $5
+      WHERE id_insumo = $6 AND activo = true
+      RETURNING *
+    `;
+
+      const result = await pool.query(sqlUpdate, [
+        nombre,
+        stock_actual,
+        stock_minimo,
+        unidad_medida,
+        precio_costo_unitario,
+        id,
+      ]);
+
+      if (result.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return null;
+      }
+
+      if (cantidadCompras === 1) {
+        const nuevoPrecioTotal = stock_actual * precio_costo_unitario;
+
+        await client.query(
+          `UPDATE compras 
+         SET cantidad_comprada = $1, 
+             precio_pagado = $2
+         WHERE id_insumo = $3`,
+          [stock_actual, nuevoPrecioTotal, id],
+        );
+
+        console.log("Compra inicial actualizada:", {
+          cantidad: stock_actual,
+          precio_unitario: precio_costo_unitario,
+          total: nuevoPrecioTotal,
+        });
+      } else if (cantidadCompras > 1) {
+        console.log(
+          "Tiene múltiples compras, no se actualiza historial automáticamente",
+        );
+      }
+
+      await client.query("COMMIT");
+      return result.rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error al actualizar insumo:", error);
+      throw error;
+    } finally {
+      client.release();
     }
-
-    return result.rows[0];
   }
-
+  
   async addStock(
     id: number,
     cantidad_comprada: number,
-    precio_costo_unitario: number
+    precio_costo_unitario: number,
   ): Promise<IInsumo | null> {
     const client = await pool.connect();
 
@@ -121,7 +163,7 @@ export class InsumoData {
       // Obtener stock actual (solo si está activo)
       const resPrevio = await client.query(
         "SELECT stock_actual FROM insumos WHERE id_insumo = $1 AND activo = true FOR UPDATE",
-        [id]
+        [id],
       );
 
       if (resPrevio.rowCount === 0) {
@@ -152,7 +194,7 @@ export class InsumoData {
         await client.query(
           `INSERT INTO compras (id_insumo, cantidad_comprada, precio_pagado, fecha_compra) 
          VALUES ($1, $2, $3, NOW())`,
-          [id, cantidadComprada, gastoDeEstaCompra]
+          [id, cantidadComprada, gastoDeEstaCompra],
         );
       }
 
@@ -179,7 +221,7 @@ export class InsumoData {
       // 1. Verificar si está en recetas
       const checkRecetas = await client.query(
         "SELECT COUNT(*) as total FROM recetas WHERE id_insumo = $1",
-        [id]
+        [id],
       );
 
       const tieneRecetas = parseInt(checkRecetas.rows[0].total) > 0;
@@ -192,14 +234,14 @@ export class InsumoData {
         // Primero eliminar las compras asociadas
         const deleteCompras = await client.query(
           "DELETE FROM compras WHERE id_insumo = $1",
-          [id]
+          [id],
         );
         console.log("Compras eliminadas:", deleteCompras.rowCount);
 
         // Luego eliminar el insumo
         const result = await client.query(
           "DELETE FROM insumos WHERE id_insumo = $1",
-          [id]
+          [id],
         );
 
         if (result.rowCount === 0) {
@@ -215,7 +257,7 @@ export class InsumoData {
       console.log("⚠️ Borrado lógico (tiene recetas asociadas)");
       const result = await client.query(
         "UPDATE insumos SET activo = false WHERE id_insumo = $1 AND activo = true",
-        [id]
+        [id],
       );
 
       if (result.rowCount === 0) {
@@ -224,7 +266,7 @@ export class InsumoData {
 
       await client.query("COMMIT");
       console.log(
-        "Insumo marcado como inactivo (mantiene compras para historial)"
+        "Insumo marcado como inactivo (mantiene compras para historial)",
       );
     } catch (error) {
       await client.query("ROLLBACK");
@@ -234,8 +276,7 @@ export class InsumoData {
       client.release();
     }
   }
-  
-  // OPCIONAL: Método para restaurar un insumo
+
   async restore(id: number): Promise<IInsumo | null> {
     const sql = `
     UPDATE insumos 
@@ -253,7 +294,6 @@ export class InsumoData {
     return result.rows[0];
   }
 
-  // OPCIONAL: Ver insumos inactivos (para administración)
   async getAllInactive(): Promise<IInsumo[]> {
     const sql = `
     SELECT * FROM insumos 
