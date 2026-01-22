@@ -103,16 +103,15 @@ export class ReportData {
     const sql = `
     SELECT 
       c.id_compra,
-      (c.fecha_compra AT TIME ZONE 'UTC' AT TIME ZONE 'America/Argentina/Buenos_Aires')::date as fecha_compra,
+      DATE_TRUNC('day', c.fecha_compra)::date as fecha_compra,
       i.nombre AS insumo_nombre,
       c.cantidad_comprada,
       c.precio_pagado AS total_compra,
       i.unidad_medida
-    FROM compras c
-    JOIN insumos i ON c.id_insumo = i.id_insumo
-    WHERE (c.fecha_compra AT TIME ZONE 'UTC' AT TIME ZONE 'America/Argentina/Buenos_Aires')::date 
-          BETWEEN $1::date AND $2::date
-    ORDER BY c.fecha_compra DESC
+   FROM compras c
+   JOIN insumos i ON c.id_insumo = i.id_insumo
+   WHERE c.fecha_compra::date BETWEEN $1::date AND $2::date
+   ORDER BY c.fecha_compra DESC
   `;
     const result = await pool.query(sql, [desde, hasta]);
     return result.rows;
