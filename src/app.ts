@@ -36,6 +36,13 @@ const opcionesCors = {
   credentials: true,
 };
 
+app.get("/check-date", (req, res) => {
+  res.json({
+    serverTime: new Date().toLocaleString(),
+    timezone: process.env.TZ || "Not set (Default UTC)",
+  });
+});
+
 app.use(cors(opcionesCors));
 app.use(express.json());
 
